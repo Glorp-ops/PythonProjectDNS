@@ -13,6 +13,6 @@ class JWTSettings:
     ALGORITHM: str = "ES256"
     TYPE_JWT = "JWT"
     EXPIRATION_ACCESS: int = 60 * 15
-    EXPIRATION_SESSION: int = datetime.datetime.now(
-        tz=datetime.UTC
-    ) + datetime.timedelta(days=30)
+    EXPIRATION_SESSION: int = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(
+        days=30
+    )

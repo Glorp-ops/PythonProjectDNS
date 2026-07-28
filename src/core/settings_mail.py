@@ -1,7 +1,7 @@
 from os import getenv
 
 from dotenv import load_dotenv
-from fastapi_mail import ConnectionConfig
+from fastapi_mail.config import ConnectionConfig
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 
@@ -24,5 +24,5 @@ class SettingsMail(BaseSettings):
     )
 
     @property
-    def conf_mail(self):
+    def conf_mail(self) -> ConnectionConfig:
         return self._MAIL_CONF

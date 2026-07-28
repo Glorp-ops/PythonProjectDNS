@@ -1,111 +1,68 @@
-import datetime
-import logging
-from hashlib import sha256
-from secrets import token_urlsafe
+from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 from fastapi.background import BackgroundTasks
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
-from src.core.config import settings
-from src.database.repositories_db.session_repository import SessionRepository
-from src.database.repositories_db.user_repository import UserRepository
-from src.database.sqlalchemy_connect.connect_db import get_session
-from src.dependencies.generate_nickname import generate_nickname
-from src.redis_db.repositories_redis.redis_auth_email import repo_auth_email
-from src.schemes.auth_email import AuthEmail
-from src.schemes.check_code import CheckCode
-from src.schemes.email_info import EmailInfo
-from src.servies.encode_decode_get_put_jwt_data_auth.encode_decode_jwt import encode_jwt
-from src.servies.encode_decode_get_put_jwt_data_auth.get_put_jwt_data_auth_cookie import (
-    put_jwt_data_auth_cookie,
+from ..database.sqlalchemy_connect import get_session
+from ..dependencies import (
+    random_code,
+    validate_get_auth_step_token,
+    validate_user_email_with_nickname,
 )
-from src.servies.encode_decode_get_put_jwt_data_auth.get_put_jwt_data_auth_headers import (
-    get_user_agent,
-    put_jwt_data_auth_headers,
+from ..redis_db import repo_auth_email
+from ..schemes import AuthEmail, CheckCode, EmailInfo, TokenInfo
+from ..services import send_email, validate_code
+from ..services.encode_decode_get_put_jwt_data_auth import (
+    delete_auth_step_token,
+    put_auth_step_token,
 )
-from src.servies.send_validate_mail import random_code, send_email, validate_code
+from ..services.services_layer import AuthService
 
-router = APIRouter(prefix="/auth_mail", tags=["auth_mail"])
+router = APIRouter(prefix="/api/v1/auth-mail", tags=["auth-mail"])
 
 
-@router.post("/send_mail")
-async def auth_mail(mail: AuthEmail, background_tasks: BackgroundTasks):
-    code = await random_code()
-    await repo_auth_email.set_data_auth(email=mail.recipients[0], code=code)
+@router.post("/email", status_code=201)
+async def auth_mail(mail: AuthEmail, background_tasks: BackgroundTasks, response: Response):
+
+    secret = uuid4().hex
+    code = random_code()
+    await repo_auth_email.set_data_auth(
+        email=mail.recipients[0].email, code=code, secret=secret
+    )
     background_tasks.add_task(send_email, mail.recipients, code)
+    put_auth_step_token(response=response, secret=secret)
 
     return {"data": EmailInfo()}
 
 
-@router.post("/user_code")
+@router.post("/code", status_code=201)
 async def user_check_code(
     user_code: CheckCode,
     request: Request,
     response: Response,
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    secret = validate_get_auth_step_token(request=request)
 
-    exp_session = settings.settings_jwt.EXPIRATION_SESSION
-    key = await repo_auth_email.manager.redis.keys(
-        "auth:litemike134 <litemike134@gmail.com>:attempts:"
-    )
-    try:
-        email: str = key[0].replace("<", ":").replace(">", ":").split(":")[2]
-    except IndexError:
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE,
-            detail="Your email verification code has expired. Request a new code.",
-        )
+    email = await repo_auth_email.manager.redis.get(f"auth:{secret}")
+    code = await repo_auth_email.manager.redis.get(f"auth:code:{email}")
 
-    logging.info(email)
-
-    code = await repo_auth_email.manager.redis.get(
-        "auth:code:litemike134 <litemike134@gmail.com>"
+    await validate_code(email, code, user_code=user_code.code, secret=secret)
+    user = await validate_user_email_with_nickname(
+        email=email, session=session, request=request
     )
 
-    logging.info(code)
-    logging.info(user_code.code)
-
-    await validate_code(email, code, user_code=user_code.code)
-
-    user = await UserRepository(session).check_auth_emai_user(
-        nickname=await generate_nickname(), email=email
+    access_token, user_session = await AuthService(session).add_auth_data(
+        request=request, user_id=user.id, user_name=user.name, response=response
     )
 
-    logging.info(user)
-    user_session = await SessionRepository(session).add(
-        auth_ssid=sha256(token_urlsafe(32).encode()).hexdigest(),
-        refresh_token=sha256(token_urlsafe(32).encode()).hexdigest(),
-        user_agent=await get_user_agent(request),
-        auth_public_uid=token_urlsafe(16),
-        ip=request.client.host,
-        expires_at=exp_session,
-        created_at=datetime.datetime.now(tz=datetime.UTC),
-        user_id=[data.id for data in user][0],
-    )
-    auth_ssid = [session.auth_ssid for session in user_session][0]
-    refresh_token = [data.refresh_token for data in user_session][0]
+    await repo_auth_email.delete_auth_data(secret=secret, email=email[0])
+    delete_auth_step_token(response=response, secret=secret)
 
-    payload = {
-        "authSSID": auth_ssid,
-        "jti": uuid4().hex,
-        "userId": [data.id for data in user][0].hex,
-        "userName": [data.name for data in user][0],
+    return {
+        "data": TokenInfo(access_token=access_token, refresh_token=user_session.refresh_token),
+        "user": {"id": user.id, "email": user.email},
     }
-
-    access_token = await encode_jwt(payload=payload)
-
-    await put_jwt_data_auth_cookie(
-        access_token=access_token,
-        expires_jwt=settings.settings_jwt.EXPIRATION_ACCESS,
-        expires_session=exp_session,
-        auth_ssid=auth_ssid,
-        auth_refresh_token=refresh_token,
-        response=response,
-    )
-
-    return {"message": "success"}

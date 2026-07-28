@@ -20,6 +20,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 from src.core.config import settings
 from src.database.sqlalchemy_connect.base import Base
+import src.database.db_models
 
 target_metadata = Base.metadata
 

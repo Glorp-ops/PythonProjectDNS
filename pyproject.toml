@@ -11,20 +11,22 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "ruff (>=0.15.17,<0.16.0)",
-    "fastapi-users[oauth,sqlalchemy] (>=15.0.5,<16.0.0)",
     "fastapi (>=0.137.1,<0.138.0)",
     "alembic (>=1.18.4,<2.0.0)",
     "sqlalchemy[async] (>=2.0.51,<3.0.0)",
     "asyncpg (>=0.31.0,<0.32.0)",
     "bcrypt (>=5.0.0,<6.0.0)",
-    "pyright (>=1.1.410,<2.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
     "fastapi-mail (>=1.6.4,<2.0.0)",
     "uvicorn[standart] (>=0.49.0,<0.50.0)",
     "pydantic-settings (>=2.14.1,<3.0.0)",
     "cryptography (>=49.0.0,<50.0.0)",
     "pyjwt (>=2.13.0,<3.0.0)",
-    "redis (>=8.0.1,<9.0.0)"
+    "redis (>=8.0.1,<9.0.0)",
+    "fastapi-cache3 (>=0.5.0,<0.6.0)",
+    "pyrefly (>=1.1.1,<2.0.0)",
+    "celery (>=5.6.3,<6.0.0)",
+    "sqladmin[full] (>=0.29.0,<0.30.0)",
 ]
 
 [dependency-groups]
@@ -34,12 +36,16 @@ dev = [
 
 [tool.ruff]
 
+line-length = 95
+
 fix = true
 
 exclude = [
     '.git',
     '.env',
-    '__pycache__'
+    '__pycache__',
+    'alembic',
+    '.venv'
 ]
 
 lint.select = [
@@ -59,6 +65,12 @@ lint.select = [
 quote-style = 'double'
 indent-style = 'space'
 line-ending = 'auto'
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

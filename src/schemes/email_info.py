@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class EmailInfo(BaseModel):
-    wasSend: bool = True
-    secondsBeforeResending: int = 30
+    was_send: bool = True
+    seconds_before_resending: int = 30

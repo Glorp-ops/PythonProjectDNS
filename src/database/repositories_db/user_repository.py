@@ -1,31 +1,38 @@
-import logging
+from uuid import UUID
 
-from pydantic import BaseModel
+from fastapi import HTTPException
+from sqlalchemy import select
+from starlette import status
 
-from src.database.db_models import User
-from src.database.repositories_db.base_repository import BaseRepository
-from src.datamapers.user_mapper import UserMaper
+from ...data_mappers.data_mappers_repository import UserMapper
+from ..db_models import User
+from ..repositories_db import BaseRepository
 
 
 class UserRepository(BaseRepository):
     model = User
-    mapper: BaseModel = UserMaper
+    mapper = UserMapper
 
-    async def check_auth_emai_user(self, nickname: str, email: str):
+    async def get_filter_with_and_not(self, model_id: UUID, **kwargs):
 
-        user = await UserRepository(self.session).get_filter(email=email)
+        smt = select(self.model).filter_by(**kwargs).where(self.model.id != model_id)
 
-        logging.info(nickname)
+        objects = await self.session.execute(smt)
 
-        if not user:
-            user_add = await UserRepository(self.session).add(
-                email=email, nickname=nickname
-            )
+        if objects.scalar_one_or_none() is None:
+            return None
 
-            await self.session.commit()
+        return self.mapper.model_validate(objects.scalar_one_or_none())
 
-            return user_add
+    async def check_user_email(self, email: str):
+        from src.dependencies.checker import check_active, check_block
 
-        await self.session.commit()
+        user_email = await UserRepository(self.session).get_filter(email=email)
 
-        return user
+        if not user_email:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        await check_active(session=self.session, user_id=user_email[0].id)
+        await check_block(session=self.session, user_id=user_email[0].id)
+
+        return user_email

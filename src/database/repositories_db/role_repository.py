@@ -1,6 +1,6 @@
-from src.database.db_models.roles import Role
-from src.database.repositories_db.base_repository import BaseRepository
-from src.datamapers.role_mapper import RoleMapper
+from ...data_mappers.data_mappers_repository import RoleMapper
+from ..db_models import Role
+from ..repositories_db import BaseRepository
 
 
 class RoleRepository(BaseRepository):
