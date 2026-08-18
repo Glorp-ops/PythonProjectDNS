@@ -8,6 +8,7 @@ from .like_repository import LikeRepository
 from .order_items_repository import OrderItemRepository
 from .orders_repository import OrderRepository
 from .permission_repository import PermissionRepository
+from .products_categories_repository import ProductCategoryRepository
 from .products_repository import ProductsRepository
 from .reviews_repository import ReviewsRepository
 from .role_permissions import RolesPermissionsRepository
@@ -15,7 +16,6 @@ from .role_repository import RoleRepository
 from .roles_users_repository import UserRoleRepository
 from .session_repository import SessionRepository
 from .user_repository import UserRepository
-from .products_categories_repository import ProductCategoryRepository
 
 __all__ = [
     "BaseRepository",
@@ -28,6 +28,7 @@ __all__ = [
     "OrderItemRepository",
     "OrderRepository",
     "PermissionRepository",
+    "ProductCategoryRepository",
     "ProductsRepository",
     "ReviewsRepository",
     "RoleRepository",
@@ -35,5 +36,4 @@ __all__ = [
     "SessionRepository",
     "UserRepository",
     "UserRoleRepository",
-    "ProductCategoryRepository",
 ]

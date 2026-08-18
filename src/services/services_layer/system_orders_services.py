@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from fastapi import status as status_code
-from sqlalchemy import select, update, func
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -110,7 +110,6 @@ class SystemOrderService:
         orders_data_massiv = []
         products_data_massiv = []
         total_price: int = 0
-        count: int = 0
 
         for data in order_data:
             for data_order_items in data.order_items:

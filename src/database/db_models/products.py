@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, func
+from sqlalchemy import CheckConstraint, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.sqlalchemy_connect.base import Base
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from .favorites import Favorite
     from .images import Image
     from .order_items import OrderItem
-    from .reviews import Review
     from .products_categories import ProductCategory
+    from .reviews import Review
 
 
 class Product(Base):

@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends
 from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..data_mappers.data_mappers_get import GetProductsMapper
 from ..data_mappers.data_mappers_repository import ProductsMapper
 from ..database.repositories_db import ProductsRepository
 from ..database.sqlalchemy_connect import get_session

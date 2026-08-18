@@ -42,7 +42,7 @@ class UserRepository(BaseRepository):
                 "surname": user_email[0].surname,
                 "nickname": user_email[0].nickname,
                 "active_at": user_email[0].active_at,
-                "is_blocked": user_email[0].is_blocked
+                "is_blocked": user_email[0].is_blocked,
             }
         }
         return user_data

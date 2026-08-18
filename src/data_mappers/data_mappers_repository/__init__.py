@@ -7,6 +7,7 @@ from .likes_mapper import LikeMapper
 from .order_items_mapper import OrderItemMapper
 from .orders_mapper import OrderMapper
 from .permissions_mapper import PermissionMapper
+from .products_categories_mapper import ProductCategoryMapper
 from .products_mapper import ProductsMapper
 from .reviews_mapper import ReviewMapper
 from .role_mapper import RoleMapper
@@ -14,7 +15,6 @@ from .roles_permissions_mapper import RolesPermissionsMapper
 from .session_mapper import SessionMapper
 from .user_mapper import UserMapper
 from .users_roles_mapper import UserRoleMapper
-from .products_categories_mapper import ProductCategoryMapper
 
 __all__ = [
     "BlacklistMapper",
@@ -26,6 +26,7 @@ __all__ = [
     "OrderItemMapper",
     "OrderMapper",
     "PermissionMapper",
+    "ProductCategoryMapper",
     "ProductsMapper",
     "ReviewMapper",
     "RoleMapper",
@@ -33,5 +34,4 @@ __all__ = [
     "SessionMapper",
     "UserMapper",
     "UserRoleMapper",
-    "ProductCategoryMapper",
 ]

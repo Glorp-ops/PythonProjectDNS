@@ -29,11 +29,11 @@ __all__ = [
     "OrderItem",
     "Permission",
     "Product",
+    "ProductCategory",
     "Review",
     "Role",
     "RolesPermissions",
     "Session",
     "User",
     "UserRole",
-    "ProductCategory",
 ]

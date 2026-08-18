@@ -11,6 +11,7 @@ from .likes_manage import LikeManage
 from .orders_items_manage import OrderItemManage
 from .orders_manage import OrderManage
 from .permissions_manage import PermissionManage
+from .products_categories_manage import ProductCategoryManage
 from .products_manage import ProductManage
 from .reviews_manage import ReviewManage
 from .roles_manage import RoleManage
@@ -18,7 +19,6 @@ from .roles_permissions_manage import RolesPermissionsManage
 from .session_manager import SessionManager
 from .user_manage import UserManage
 from .users_roles_manage import UserRoleManage
-from .products_categories_manage import ProductCategoryManage
 
 __all__ = [
     "BaseAdminSettings",
@@ -32,6 +32,7 @@ __all__ = [
     "OrderItemManage",
     "OrderManage",
     "PermissionManage",
+    "ProductCategoryManage",
     "ProductManage",
     "ReviewManage",
     "RoleManage",
@@ -39,7 +40,6 @@ __all__ = [
     "SessionManager",
     "UserManage",
     "UserRoleManage",
-    "ProductCategoryManage",
     "add_admin",
 ]
 

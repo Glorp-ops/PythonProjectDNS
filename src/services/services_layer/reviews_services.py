@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 from uuid import UUID
-from sqlalchemy.exc import IntegrityError
+
 from fastapi import HTTPException, status
 from sqlalchemy import desc, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -45,10 +46,10 @@ class ReviewService:
                 title=title,
                 content=content,
             )
-        except IntegrityError:
+        except IntegrityError as e:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="That's review already exists."
-            )
+            ) from e
 
         product = await self.session.get(self.product_repo.model, product_id)
 

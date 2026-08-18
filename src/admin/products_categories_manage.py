@@ -1,6 +1,7 @@
+from typing import ClassVar
+
 from ..admin import BaseAdminSettings
 from ..database.db_models import ProductCategory
-from typing import ClassVar
 
 
 class ProductCategoryManage(BaseAdminSettings, model=ProductCategory):

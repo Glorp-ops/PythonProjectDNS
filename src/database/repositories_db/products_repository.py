@@ -1,5 +1,6 @@
-from sqlalchemy import select, or_, func
-from sqlalchemy.orm import joinedload, load_only, selectinload, with_loader_criteria
+from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload, load_only, selectinload
+
 from ...data_mappers.data_mappers_get import GetProductsMapper
 from ...data_mappers.data_mappers_repository import ProductsMapper
 from ..db_models import Product, ProductCategory

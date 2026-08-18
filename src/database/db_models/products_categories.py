@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING
-from ..sqlalchemy_connect.base import Base
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+
 from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from ..sqlalchemy_connect.base import Base
 
 if TYPE_CHECKING:
-    from .products import Product
     from .categories import Category
+    from .products import Product
 
 
 class ProductCategory(Base):
