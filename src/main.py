@@ -1,15 +1,16 @@
 import logging
 from contextlib import asynccontextmanager
-from starlette.middleware.sessions import SessionMiddleware
+
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from sqladmin import Admin
+from starlette.middleware.sessions import SessionMiddleware
 from uvicorn import run
-from .core import settings
 
 from .admin import add_admin
 from .admin.auth_admin import authentication_backend
+from .core import settings
 from .database.sqlalchemy_connect import async_session
 from .redis_db import redis_manager
 from .routers import (

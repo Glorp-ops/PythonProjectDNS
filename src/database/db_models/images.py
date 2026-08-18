@@ -13,8 +13,7 @@ class Image(Base):
     __tablename__ = "images"
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("products.id", onupdate="CASCADE", ondelete="CASCADE"),
-        index=True
+        ForeignKey("products.id", onupdate="CASCADE", ondelete="CASCADE"), index=True
     )
     image_url: Mapped[str]
 

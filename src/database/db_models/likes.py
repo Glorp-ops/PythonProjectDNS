@@ -13,7 +13,9 @@ if TYPE_CHECKING:
 
 class Like(MixinReferUser, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    review_id: Mapped[int] = mapped_column(ForeignKey("reviews.id", ondelete="CASCADE"), index=True)
+    review_id: Mapped[int] = mapped_column(
+        ForeignKey("reviews.id", ondelete="CASCADE"), index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=UTC),

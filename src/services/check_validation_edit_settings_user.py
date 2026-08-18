@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from fastapi import Request, Response, HTTPException
+from fastapi import HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+
 from ..core import settings
 from ..schemes import UserData
 from ..services.encode_decode_get_put_jwt_data_auth import (

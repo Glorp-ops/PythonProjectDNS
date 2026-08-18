@@ -1,7 +1,6 @@
 from typing import ClassVar
 
 from ..admin import BaseAdminSettings
-
 from ..database.db_models import Review
 
 
@@ -11,7 +10,6 @@ class ReviewManage(BaseAdminSettings, model=Review):
         "id",
         "user_id",
         "product_id",
-        "review_date",
         "rating",
         "title",
         "content",

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from uuid import UUID
-
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,9 +13,9 @@ from ...data_mappers.data_mappers_get import (
 )
 from ...database.db_models import Like
 from ...database.repositories_db import (
+    OrderItemRepository,
     ProductsRepository,
     ReviewsRepository,
-    OrderItemRepository,
 )
 from ...schemes import UpdateReviewsScheme
 
@@ -37,14 +37,19 @@ class ReviewService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You cannot leave a review for a product you did not order.",
             )
+        try:
+            review = await self.review_repo.add(
+                user_id=user_id,
+                product_id=product_id,
+                rating=rating,
+                title=title,
+                content=content,
+            )
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="That's review already exists."
+            )
 
-        review = await self.review_repo.add(
-            user_id=user_id,
-            product_id=product_id,
-            rating=rating,
-            title=title,
-            content=content,
-        )
         product = await self.session.get(self.product_repo.model, product_id)
 
         if not product:
@@ -69,10 +74,18 @@ class ReviewService:
 
         return review, product.rating, product.review_count
 
-    async def delete_review(self, review_id: int):
-        review = await self.review_repo.delete(id=review_id)
-        await self.session.commit()
+    async def delete_review(self, review_id: int, user_id: UUID):
+        review = await self.review_repo.delete(id=review_id, user_id=user_id)
+
         try:
+            review_count_rating_db = await self.session.execute(
+                select(
+                    func.avg(ReviewsRepository.model.rating).label("rating"),
+                    func.count(ReviewsRepository.model.id).label("review_count"),
+                ).where(ReviewsRepository.model.product_id == review[0].product_id)
+            )
+            review_count_rating = review_count_rating_db.first()
+
             product = await self.session.get(self.product_repo.model, review[0].product_id)
         except IndexError as e:
             raise HTTPException(
@@ -86,7 +99,7 @@ class ReviewService:
 
         product.review_count -= 1
         try:
-            product.rating = product.rating / product.review_count
+            product.rating = review_count_rating.rating / review_count_rating.review_count
         except ZeroDivisionError:
             product.rating = 0
 
@@ -117,7 +130,10 @@ class ReviewService:
 
             review.rating = review_update.rating
 
-            product.rating = review.rating / product.review_count
+            try:
+                product.rating = review.rating / product.review_count
+            except ZeroDivisionError:
+                product.rating = 0
 
         review.updated_at = datetime.now(UTC)
 
@@ -132,6 +148,9 @@ class ReviewService:
     async def get_reviews_product(
         self, product_id: int, page: int, size: int, new: bool, more_like: bool
     ):
+        count_reviews = await self.session.scalar(
+            select(func.count()).select_from(ReviewsRepository.model)
+        )
 
         stmt = (
             select(
@@ -176,7 +195,7 @@ class ReviewService:
             )
 
         return reviews_data_validate, GetReviewPaginationMapper(
-            page=page, size=size, pages_all=(len(reviews_data_validate) // size) + 1
+            page=page, size=size, pages_all=(count_reviews // size)
         )
 
     async def get_review_product(self, review_id: int):

@@ -4,6 +4,7 @@ from src.data_mappers.data_mappers_get.get_products_mapper import GetProductsMap
 
 
 class GetCartItemsMapper(BaseModel):
+    id: int
     price_at_add: int
     quantity: int
     total_price: int

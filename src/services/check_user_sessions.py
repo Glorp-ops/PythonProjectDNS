@@ -8,7 +8,6 @@ from sqlalchemy.orm import joinedload, selectinload, with_loader_criteria
 from starlette import status
 
 from ..database.repositories_db import BlackListRepository, UserRepository
-
 from ..services.encode_decode_get_put_jwt_data_auth import (
     get_jwt_data_auth_cookie,
 )
@@ -120,15 +119,16 @@ async def check_users_sessions(
     refresh_token: bool = False,
     user_id_from_session: UUID | None = None,
 ):
+    from src.dependencies.validation import (
+        validate_check_session,
+        validate_payload,
+    )
+
     from ..dependencies import (
         check_active,
         check_block,
         check_exp_sessions,
         check_revoked,
-    )
-    from src.dependencies.validation import (
-        validate_check_session,
-        validate_payload,
     )
 
     auth_data = get_jwt_data_auth_cookie(request=request)

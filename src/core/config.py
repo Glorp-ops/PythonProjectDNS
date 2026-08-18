@@ -1,8 +1,10 @@
 from pathlib import Path
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-from src.core.settings_mail import SettingsMail
+
 from src.core.settings_jwt import JWTSettings
+from src.core.settings_mail import SettingsMail
 
 load_dotenv()
 

@@ -20,8 +20,7 @@ class CartItem(Base):
         ForeignKey("carts.id", ondelete="CASCADE", onupdate="CASCADE")
     )
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("products.id", ondelete="SET NULL", onupdate="CASCADE"),
-        index=True
+        ForeignKey("products.id", ondelete="SET NULL", onupdate="CASCADE"), index=True
     )
     quantity: Mapped[int] = mapped_column(default=1)
     price_at_add: Mapped[Decimal] = mapped_column(Numeric(10, 2))

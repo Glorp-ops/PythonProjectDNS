@@ -9,21 +9,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.sqlalchemy_connect.base import Base
 
 if TYPE_CHECKING:
-    from database.db_models.carts_items import CartItem
-    from database.db_models.categories import Category
-    from database.db_models.favorites import Favorite
-    from database.db_models.images import Image
-    from database.db_models.order_items import OrderItem
-    from database.db_models.reviews import Review
+    from .carts_items import CartItem
+    from .favorites import Favorite
+    from .images import Image
+    from .order_items import OrderItem
+    from .reviews import Review
+    from .products_categories import ProductCategory
 
 
 class Product(Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    category_id: Mapped[int | None] = mapped_column(
-        ForeignKey("categories.id", ondelete="SET NULL", onupdate="CASCADE")
-    )
     name: Mapped[str] = mapped_column(String(250))
     price: Mapped[Decimal]
     quantity: Mapped[int]
@@ -39,9 +36,6 @@ class Product(Base):
     )
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
-    categories: Mapped[list["Category"]] = relationship(
-        back_populates="products", uselist=True
-    )
     images: Mapped[list["Image"]] = relationship(back_populates="products", uselist=True)
     carts_items: Mapped[list["CartItem"]] = relationship(
         back_populates="products", uselist=True
@@ -53,6 +47,10 @@ class Product(Base):
     reviews: Mapped[list["Review"]] = relationship(back_populates="products", uselist=True)
 
     favorites: Mapped[list["Favorite"]] = relationship(back_populates="products", uselist=True)
+
+    products_categories: Mapped[list["ProductCategory"]] = relationship(
+        back_populates="products", uselist=True
+    )
 
     __table_args__ = (
         CheckConstraint("price > 0", name="product_price"),

@@ -1,3 +1,9 @@
+from ..db_models.reviews import Review
+from ..db_models.roles import Role
+from ..db_models.roles_permissions import RolesPermissions
+from ..db_models.sessions import Session
+from ..db_models.users import User
+from ..db_models.users_roles import UserRole
 from .blacklists import Blacklist
 from .carts import Cart
 from .carts_items import CartItem
@@ -9,12 +15,7 @@ from .order_items import OrderItem
 from .orders import Order
 from .permissions import Permission
 from .products import Product
-from ..db_models.reviews import Review
-from ..db_models.roles import Role
-from ..db_models.roles_permissions import RolesPermissions
-from ..db_models.sessions import Session
-from ..db_models.users import User
-from ..db_models.users_roles import UserRole
+from .products_categories import ProductCategory
 
 __all__ = [
     "Blacklist",
@@ -34,4 +35,5 @@ __all__ = [
     "Session",
     "User",
     "UserRole",
+    "ProductCategory",
 ]

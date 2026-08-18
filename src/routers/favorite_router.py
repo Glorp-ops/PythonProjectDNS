@@ -3,13 +3,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from sqlalchemy.exc import IntegrityError
+
 from ..database.repositories_db import FavoriteRepository
 from ..database.sqlalchemy_connect import get_session
+from ..dependencies.validation import validate_add_favorites
 from ..schemes import CartItem, pagination
 from ..services import check_users_sessions
 from ..services.services_layer import FavoriteServices
-from ..dependencies.validation import validate_add_favorites
 
 router = APIRouter(prefix="/api/v1/favorites", tags=["favorite"])
 
@@ -40,7 +40,9 @@ async def get_favorites(
         session, request=request, permission="favorites:view"
     )
 
-    favorite_data, total_count = await FavoriteServices(session).get_favorites(
+    favorite_data, total_count, pagination_settings = await FavoriteServices(
+        session
+    ).get_favorites(
         user_id=payload_validate.userId, page=pagination.page, size=pagination.size
     )
 
@@ -48,6 +50,7 @@ async def get_favorites(
         "status": "success",
         "total_count": total_count,
         "favorites_data": favorite_data,
+        "pagination": pagination_settings,
     }
 
 

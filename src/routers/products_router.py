@@ -19,7 +19,6 @@ router = APIRouter(prefix="/api/v1/products", tags=["products"])
 @cache(1800)
 @router.get(
     "",
-    response_model=list[GetProductsMapper],
 )
 # 1800
 @cache(expire=10)
@@ -27,9 +26,25 @@ async def get_products(
     session: Annotated[AsyncSession, Depends(get_session)],
     pagination: pagination,
 ):
-    return await ProductsRepository(session).get_all_with_join_no_description(
-        page=pagination.page, size=pagination.size
+    products_data, pagination = await ProductsRepository(
+        session
+    ).get_all_with_join_no_description(page=pagination.page, size=pagination.size)
+    return {"data": products_data, "pagination": pagination}
+
+
+@router.get("/category")
+async def get_products_category(
+    category_id: int,
+    pagination: pagination,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    products_data, pagination_settings = await ProductsRepository(
+        session
+    ).get_products_category(
+        category_id=category_id, size=pagination.size, page=pagination.page
     )
+
+    return products_data, pagination_settings
 
 
 @router.get(
@@ -40,3 +55,6 @@ async def get_products(
 @cache(expire=10)
 async def get_product(product_id: int, session: Annotated[AsyncSession, Depends(get_session)]):
     return await validate_product_get_id_with_join_and_description(session, product_id)
+
+
+cache(expire=1000)

@@ -35,10 +35,23 @@ class SessionRepository(BaseRepository):
 
         return objects
 
-    async def delete_with_and(self, user_id: UUID, auth_public_uid: str):
+    async def revoke_current_session(self, user_id: UUID, auth_public_uid: str):
         smt = (
             delete(self.model)
             .where(self.model.user_id == user_id, self.model.id == auth_public_uid)
+            .returning(self.model)
+        )
+
+        objects = await self.session.execute(smt)
+
+        await self.session.commit()
+
+        return objects
+
+    async def delete_all_sessions_except_current(self, user_id: UUID, auth_public_uid: str):
+        smt = (
+            delete(self.model)
+            .where(self.model.user_id == user_id, self.model.id != auth_public_uid)
             .returning(self.model)
         )
 

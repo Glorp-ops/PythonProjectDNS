@@ -20,4 +20,4 @@ class ProductsMapper(BaseModel):
     sku: str
     active_at: bool
     created_at: datetime.datetime
-    category: dict[str, Any] | str = Field(None)
+    categories: list[int] | None = Field(None)

@@ -15,7 +15,7 @@ from ..dependencies import (
     validate_user_delete,
 )
 
-router = APIRouter(prefix="/live", tags=["exit-delete-profile"])
+router = APIRouter(prefix="/api/v1/live", tags=["exit-delete-profile"])
 
 
 @router.delete("/logout")

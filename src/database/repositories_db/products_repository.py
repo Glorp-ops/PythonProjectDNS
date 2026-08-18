@@ -1,9 +1,8 @@
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload, load_only, selectinload
-
+from sqlalchemy import select, or_, func
+from sqlalchemy.orm import joinedload, load_only, selectinload, with_loader_criteria
 from ...data_mappers.data_mappers_get import GetProductsMapper
 from ...data_mappers.data_mappers_repository import ProductsMapper
-from ..db_models import Product
+from ..db_models import Product, ProductCategory
 from ..repositories_db import BaseRepository
 
 
@@ -11,7 +10,47 @@ class ProductsRepository(BaseRepository):
     model = Product
     mapper = ProductsMapper
 
+    async def get_products_category(self, category_id: int, size: int, page: int):
+
+        count_products = await self.session.scalar(select(func.count()).select_from(Product))
+
+        products_category_db = await self.session.scalars(
+            select(Product)
+            .join(ProductCategory)
+            .offset((page - 1) * size)
+            .limit(size)
+            .where(ProductCategory.category_id == category_id)
+            .options(joinedload(Product.images))
+        )
+
+        products_category_massiv = []
+
+        for product in products_category_db.unique():
+            try:
+                image_url = product.images[0].image_url
+            except IndexError:
+                image_url = None
+
+            products_category_massiv.append(
+                GetProductsMapper(
+                    id=product.id,
+                    image_url=image_url,
+                    name=product.name,
+                    price=product.price,
+                    review_count=product.review_count,
+                    rating=product.rating,
+                )
+            )
+
+        return products_category_massiv, {
+            "page": page,
+            "size": size,
+            "all_pages": (count_products // size),
+        }
+
     async def get_all_with_join_no_description(self, page: int, size: int):
+        count_products = await self.session.scalar(select(func.count()).select_from(Product))
+
         products_db = (
             select(self.model)
             .offset(size * (page - 1))
@@ -49,16 +88,17 @@ class ProductsRepository(BaseRepository):
                 )
             )
 
-        return massiv
+        return massiv, {"page": page, "size": size, "page_all": count_products // size}
 
     async def get_id_with_join_and_description(self, product_id):
+
         product_db = await self.session.execute(
             (select(self.model).where(self.model.id == product_id)).options(
-                joinedload(self.model.categories), joinedload(self.model.images)
+                selectinload(self.model.products_categories), selectinload(self.model.images)
             )
         )
 
-        product = product_db.unique().scalar_one()
+        product = product_db.scalar_one()
 
         return self.mapper(
             id=product.id,
@@ -73,11 +113,7 @@ class ProductsRepository(BaseRepository):
             active_at=product.active_at,
             review_count=product.review_count,
             rating=product.rating,
-            category={
-                "id": product.category_id,
-                "name": product.categories[0].name,
-                "slug": product.categories[0].slug,
-            },
+            categories=[data.category_id for data in product.products_categories],
         )
 
     async def update_quantity(self, product_id: int, quantity: int):

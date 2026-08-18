@@ -1,7 +1,6 @@
 from typing import ClassVar
 
 from ..admin import BaseAdminSettings
-
 from ..database.db_models import Like
 
 

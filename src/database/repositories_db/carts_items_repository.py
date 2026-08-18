@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 
 from ...data_mappers.data_mappers_get import GetCartItemsMapper
@@ -16,6 +16,10 @@ class CartsItemsRepository(BaseRepository):
 
     async def get_data_cart_and_cart_items(self, user_id: UUID, page: int, size: int):
         from ...data_mappers.data_mappers_get import GetProductsMapper
+
+        count_cart_items = await self.session.scalar(
+            select(func.count()).select_from(self.model)
+        )
 
         user_cart_data = await self.session.execute(
             select(self.model, Cart.user_id)
@@ -47,6 +51,7 @@ class CartsItemsRepository(BaseRepository):
 
             massiv.append(
                 GetCartItemsMapper(
+                    id=data.id,
                     price_at_add=data.price_at_add,
                     quantity=data.quantity,
                     total_price=data.total_price,
@@ -68,4 +73,10 @@ class CartsItemsRepository(BaseRepository):
             "total_cart_price": total_cart_price,
         }
 
-        return massiv, cart_data, summary, cart_active
+        return (
+            massiv,
+            cart_data,
+            summary,
+            cart_active,
+            {"page": page, "size": size, "all_pages": (count_cart_items // size)},
+        )

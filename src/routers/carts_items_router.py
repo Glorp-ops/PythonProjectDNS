@@ -48,9 +48,13 @@ async def get_carts(
         session, request=request, permission="cart:view"
     )
 
-    cart_items_data, cart_data, summary, cart_is_active = await CartsItemsRepository(
-        session
-    ).get_data_cart_and_cart_items(
+    (
+        cart_items_data,
+        cart_data,
+        summary,
+        cart_is_active,
+        pagination_settings,
+    ) = await CartsItemsRepository(session).get_data_cart_and_cart_items(
         user_id=payload_validate.userId, page=pagination.page, size=pagination.size
     )
 
@@ -59,6 +63,7 @@ async def get_carts(
         "items": cart_items_data,
         "summary": summary,
         "is_active": cart_is_active,
+        "pagination": pagination_settings,
     }
 
 

@@ -5,10 +5,10 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-from typing import TYPE_CHECKING
+
+from src.database.db_models.users import User
 
 from ..sqlalchemy_connect import Base
-from src.database.db_models.users import User
 
 
 class MixinReferUser:

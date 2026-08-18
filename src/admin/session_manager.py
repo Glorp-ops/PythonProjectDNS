@@ -3,7 +3,6 @@ from typing import Any, ClassVar
 from starlette.requests import Request
 
 from ..admin import BaseAdminSettings
-
 from ..database.db_models import Session
 
 

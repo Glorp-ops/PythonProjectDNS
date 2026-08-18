@@ -1,8 +1,10 @@
 from typing import Annotated
-from fastapi_cache.decorator import cache
+
 from fastapi import APIRouter, Depends, Path, Request
+from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database.repositories_db import LikeRepository
 from ..database.sqlalchemy_connect import get_session
 from ..dependencies import validate_create_like_review
 from ..schemes import (
@@ -13,16 +15,14 @@ from ..schemes import (
 )
 from ..services import check_users_sessions
 from ..services.services_layer import ReviewService
-from ..database.repositories_db import LikeRepository
 
 router = APIRouter(
     prefix="/api/v1/reviews",
     tags=["reviews"],
 )
 
-cache(60 * 15)
 
-
+@cache(60 * 15)
 @router.get("")
 async def get_reviews(
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -123,10 +123,12 @@ async def delete_review(
     session: Annotated[AsyncSession, Depends(get_session)],
     request: Request,
 ):
-    await check_users_sessions(session, request=request, permission="review:delete")
+    payload_validate, _ = await check_users_sessions(
+        session, request=request, permission="review:delete"
+    )
 
     review, rating, review_count = await ReviewService(session).delete_review(
-        review_id=review_id
+        review_id=review_id, user_id=payload_validate.userId
     )
 
     return {

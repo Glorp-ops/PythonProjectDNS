@@ -28,8 +28,10 @@ async def create_order(
         user_id=payload_validate.userId,
         products_id=order.products_id,
     )
-    print(order_data[0].order_id)
-    update_delivery_status_task.delay(order_id=order_data[0].order_id)
+
+    update_delivery_status_task.delay(
+        order_id=order_data[0].order_id, user_id=payload_validate.userId
+    )
 
     return order_data
 
@@ -44,9 +46,11 @@ async def get_orders(
         session=session, request=request, permission="orders:view_own"
     )
 
-    return await SystemOrderService(session).get_orders(
+    orders_data, pagination_settings = await SystemOrderService(session).get_orders(
         user_id=payload_validate.userId, page=pagination.page, size=pagination.size
     )
+
+    return {"data": orders_data, "pagination": pagination_settings}
 
 
 @router.get("/{order_id}")

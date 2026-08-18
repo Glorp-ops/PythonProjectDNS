@@ -15,6 +15,7 @@ from .role_repository import RoleRepository
 from .roles_users_repository import UserRoleRepository
 from .session_repository import SessionRepository
 from .user_repository import UserRepository
+from .products_categories_repository import ProductCategoryRepository
 
 __all__ = [
     "BaseRepository",
@@ -34,4 +35,5 @@ __all__ = [
     "SessionRepository",
     "UserRepository",
     "UserRoleRepository",
+    "ProductCategoryRepository",
 ]

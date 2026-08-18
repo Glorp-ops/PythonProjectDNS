@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -22,6 +22,10 @@ class FavoriteServices:
         self.products_repo = ProductsRepository(session)
 
     async def get_favorites(self, user_id: UUID, page: int, size: int):
+        count_fovourite = await self.session.scalar(
+            select(func.count()).select_from(self.favorite_repo.model)
+        )
+
         favorite_data_db = await self.session.execute(
             select(self.favorite_repo.model)
             .where(self.favorite_repo.model.user_id == user_id)
@@ -51,7 +55,11 @@ class FavoriteServices:
                 )
             )
 
-        return favorite_data, len(favorite_data)
+        return (
+            favorite_data,
+            len(favorite_data),
+            {"page": page, "size": size, "all_pages": count_fovourite // size},
+        )
 
     async def get_favorite(self, product_id: int, user_id: UUID):
         favorite_data_db = await self.session.execute(
@@ -63,7 +71,7 @@ class FavoriteServices:
             .options(
                 joinedload(self.favorite_repo.model.products).options(
                     selectinload(self.products_repo.model.images),
-                    selectinload(self.products_repo.model.categories),
+                    selectinload(self.products_repo.model.products_categories),
                 )
             )
         )
@@ -91,6 +99,9 @@ class FavoriteServices:
                 images_url=[data.image_url for data in favorite_data[0].products[0].images],
                 created_at=favorite_data[0].products[0].created_at,
                 active_at=favorite_data[0].products[0].active_at,
-                category=favorite_data[0].products[0].categories[0].name,
+                categories=[
+                    data.category_id
+                    for data in favorite_data[0].products[0].products_categories
+                ],
             ),
         )

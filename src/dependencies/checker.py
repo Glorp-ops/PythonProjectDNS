@@ -58,7 +58,7 @@ async def check_exp_sessions(session: AsyncSession, auth_public_uid: str):
 async def verify_password_to_id(session: AsyncSession, user_id: UUID, password: str):
     user = await validate_user_get_id(session=session, user_id=user_id)
 
-    if checkpw(password.encode(), bytes.fromhex(user.password)):
+    if user.password is not None and checkpw(password.encode(), bytes.fromhex(user.password)):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You already have such the password",
@@ -90,10 +90,6 @@ async def check_products(product_id: int, session: AsyncSession, quantity: int |
 
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-
-    print(product[0].quantity)
-    print(product[0].is_deleted)
-    print(product[0].active_at)
 
     if (
         (product[0].quantity <= (quantity or 1))

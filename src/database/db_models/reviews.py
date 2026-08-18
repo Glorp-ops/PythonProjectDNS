@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, func, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.mixin_models.mixin_refer_users import MixinReferUser
@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 class Review(MixinReferUser, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), index=True
+    )
     rating: Mapped[float]
     title: Mapped[str] = mapped_column(String(50))
     content: Mapped[str] = mapped_column(String(500))
@@ -38,4 +40,9 @@ class Review(MixinReferUser, Base):
     _use_list = True
     _ondelete = "CASCADE"
 
-    __table_args__ = (CheckConstraint("rating >= 0 and rating <= 5", name="review_rating"),)
+    __table_args__ = (
+        CheckConstraint("rating >= 0 and rating <= 5", name="review_rating"),
+        UniqueConstraint(
+            "user_id", "product_id", name="unique_product_id_user_id_for_reviews"
+        ),
+    )

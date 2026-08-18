@@ -51,14 +51,14 @@ async def user_check_code(
     code = await repo_auth_email.manager.redis.get(f"auth:code:{email}")
 
     await validate_code(email, code, user_code=user_code.code, secret=secret)
-    user = await validate_user_email_with_nickname(
-        email=email, session=session, request=request
-    )
+    user = await validate_user_email_with_nickname(email=email, session=session)
 
     access_token, user_session = await AuthService(session).add_auth_data(
-        request=request, user_id=user.id, user_name=user.name, response=response
+        request=request,
+        user_id=user.id,
+        user_name=user.name,
+        response=response,
     )
-
     await repo_auth_email.delete_auth_data(secret=secret, email=email[0])
     delete_auth_step_token(response=response, secret=secret)
 

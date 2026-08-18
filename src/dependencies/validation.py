@@ -13,11 +13,11 @@ from jwt import InvalidTokenError
 
 from ..core import settings
 from ..database.repositories_db import (
+    FavoriteRepository,
     LikeRepository,
     ProductsRepository,
     SessionRepository,
     UserRepository,
-    FavoriteRepository,
 )
 from ..redis_db import repo_auth_email
 from ..schemes import AccessTokenPayload
@@ -98,17 +98,14 @@ async def validate_user_get_id(user_id: UUID, session: AsyncSession):
     return user_data
 
 
-async def validate_user_email_with_nickname(
-    email: str, session: AsyncSession, request: Request
-):
+async def validate_user_email_with_nickname(email: str, session: AsyncSession):
     from src.dependencies.generate import generate_nickname
     from src.services.services_layer.auth_services import AuthService
 
     try:
-        user = await AuthService(session).check_auth_emai_user(
-            email_user=email,
+        user = await AuthService(session).check_auth_email_user(
+            user_email=email,
             nickname=await generate_nickname(session=session),
-            request=request,
         )
     except ConnectionRefusedError as e:
         raise HTTPException(
@@ -228,7 +225,7 @@ async def validate_user_email_with_and_not(session: AsyncSession, email: str, us
 async def validate_delete_session_with_and(
     session: AsyncSession, user_id: UUID, auth_public_uid: str
 ):
-    user_session = await SessionRepository(session).delete_with_and(
+    user_session = await SessionRepository(session).revoke_current_session(
         user_id=user_id, auth_public_uid=auth_public_uid
     )
 
@@ -286,7 +283,8 @@ async def validate_create_like_review(session: AsyncSession, user_id: UUID, revi
         )
     except IntegrityError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="There's already a like"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="There's already a like or Review not found",
         ) from e
 
     return like_data, like_count
@@ -298,11 +296,11 @@ async def validate_add_favorites(session: AsyncSession, user_id: UUID, product_i
             product_id=product_id, user_id=user_id
         )
 
-    except IntegrityError:
+    except IntegrityError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="The user has this product in their favorites.",
-        )
+        ) from e
 
     if not favorite:
         raise HTTPException(

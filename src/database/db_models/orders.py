@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 class Order(MixinReferUser, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    status: Mapped[str] = mapped_column(String(25), default="собирается", server_default="собирается")
+    status: Mapped[str] = mapped_column(
+        String(25), default="собирается", server_default="собирается"
+    )
     delivery_address: Mapped[str]
     delivery_method: Mapped[str] = mapped_column(String(25))
     total_price: Mapped[Decimal]

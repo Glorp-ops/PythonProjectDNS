@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from fastapi import status as status_code
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -91,25 +91,49 @@ class SystemOrderService:
         return order_items_data
 
     async def get_orders(self, user_id: UUID, page: int, size: int):
-        order_data = await self.session.execute(
+        count_orders = await self.session.scalar(
+            select(func.count()).select_from(OrderRepository.model)
+        )
+
+        order_data_db = await self.session.execute(
             select(self.orders_repo.model)
             .where(self.orders_repo.model.user_id == user_id)
             .offset(size * (page - 1))
             .limit(size)
             .options(
-                joinedload(self.orders_repo.model.order_items)
-                .joinedload(OrderItem.products)
+                selectinload(self.orders_repo.model.order_items)
+                .selectinload(OrderItem.products)
                 .joinedload(Product.images)
             )
         )
-
-        data_massiv = []
+        order_data = order_data_db.scalars().unique().all()
+        orders_data_massiv = []
+        products_data_massiv = []
         total_price: int = 0
+        count: int = 0
 
-        for data in order_data.scalars().unique().all():
-            total_price += data.order_items[0].price_at_purchase * data.order_items[0].quantity
+        for data in order_data:
+            for data_order_items in data.order_items:
+                total_price += (
+                    data.order_items[0].price_at_purchase * data.order_items[0].quantity
+                )
 
-            data_massiv.append(
+                try:
+                    image_url = data_order_items.products[0].images[0].image_url
+                except IndexError:
+                    image_url = None
+
+                products_data_massiv.append(
+                    GetProductsMapper(
+                        id=data_order_items.products[0].id,
+                        name=data_order_items.products[0].name,
+                        image_url=image_url,
+                        price=data_order_items.products[0].price,
+                        review_count=data_order_items.products[0].review_count,
+                        rating=data_order_items.products[0].rating,
+                    )
+                )
+            orders_data_massiv.append(
                 GetOrdersScheme(
                     id=data.id,
                     status=data.status,
@@ -117,18 +141,17 @@ class SystemOrderService:
                     * data.order_items[0].quantity,
                     total_items_count=data.order_items[0].quantity,
                     created_at=data.created_at,
-                    products=GetProductsMapper(
-                        id=data.order_items[0].products[0].id,
-                        image_url=data.order_items[0].products[0].images[0].image_url,
-                        name=data.order_items[0].products[0].name,
-                        price=data.order_items[0].products[0].price,
-                        review_count=data.order_items[0].products[0].review_count,
-                        rating=data.order_items[0].products[0].rating,
-                    ),
+                    products=products_data_massiv,
                 )
             )
 
-        return {"items": data_massiv, "order_quality": len(data_massiv)}
+            products_data_massiv = []
+
+        return {"items": orders_data_massiv, "order_quality": len(orders_data_massiv)}, {
+            "page": page,
+            "size": size,
+            "all_pages": count_orders // size,
+        }
 
     async def get_order(self, order_id: int, user_id: int):
         order_data_db = await self.session.execute(
@@ -140,52 +163,59 @@ class SystemOrderService:
             .options(
                 joinedload(self.orders_repo.model.order_items)
                 .joinedload(OrderItem.products)
-                .options(selectinload(Product.images), selectinload(Product.categories)),
+                .options(
+                    selectinload(Product.images), selectinload(Product.products_categories)
+                ),
                 joinedload(self.orders_repo.model.users),
             )
         )
-
         order_items: list[GetOrderScheme] = []
         order_data: dict[str, str | int | datetime] = {}
         customer: dict[str, str] = {}
         delivery: dict[str, str] = {}
 
         for data in order_data_db.scalars().unique().all():
-            order_data.update(
-                {
-                    "order_id": data.id,
-                    "status": data.status,
-                    "created_at": data.created_at,
-                }
-            )
-            customer.update({"name": data.users.nickname, "email": data.users.email})
-            delivery.update({"method": data.delivery_method, "address": data.delivery_address})
-
-            order_items.append(
-                GetOrderScheme(
-                    price_per_item=data.order_items[0].price_at_purchase,
-                    quantity=data.order_items[0].quantity,
-                    total_item_price=data.order_items[0].quantity
-                    * data.order_items[0].price_at_purchase,
-                    product=ProductsMapper(
-                        id=data.order_items[0].product_id,
-                        name=data.order_items[0].products[0].name,
-                        price=data.order_items[0].products[0].price,
-                        quantity=data.order_items[0].products[0].quantity,
-                        is_deleted=data.order_items[0].products[0].is_deleted,
-                        sku=data.order_items[0].products[0].sku,
-                        active_at=data.order_items[0].products[0].active_at,
-                        rating=data.order_items[0].products[0].rating,
-                        review_count=data.order_items[0].products[0].review_count,
-                        created_at=data.order_items[0].products[0].created_at,
-                        category=data.order_items[0].products[0].categories[0].name,
-                        description=data.order_items[0].products[0].description,
-                        images_url=[
-                            image.image_url for image in data.order_items[0].products[0].images
-                        ],
-                    ),
+            for data_order_item in data.order_items:
+                order_data.update(
+                    {
+                        "order_id": data.id,
+                        "status": data.status,
+                        "created_at": data.created_at,
+                    }
                 )
-            )
+                customer.update({"name": data.users.nickname, "email": data.users.email})
+                delivery.update(
+                    {"method": data.delivery_method, "address": data.delivery_address}
+                )
+
+                order_items.append(
+                    GetOrderScheme(
+                        price_per_item=data_order_item.price_at_purchase,
+                        quantity=data_order_item.quantity,
+                        total_item_price=data_order_item.quantity
+                        * data_order_item.price_at_purchase,
+                        product=ProductsMapper(
+                            id=data_order_item.product_id,
+                            name=data_order_item.products[0].name,
+                            price=data_order_item.products[0].price,
+                            quantity=data_order_item.products[0].quantity,
+                            is_deleted=data_order_item.products[0].is_deleted,
+                            sku=data_order_item.products[0].sku,
+                            active_at=data_order_item.products[0].active_at,
+                            rating=data_order_item.products[0].rating,
+                            review_count=data_order_item.products[0].review_count,
+                            created_at=data_order_item.products[0].created_at,
+                            categories=[
+                                data.category_id
+                                for data in data_order_item.products[0].products_categories
+                            ],
+                            description=data_order_item.products[0].description,
+                            images_url=[
+                                image.image_url for image in data_order_item.products[0].images
+                            ],
+                        ),
+                    )
+                )
 
         return {
             "order_data": order_data,

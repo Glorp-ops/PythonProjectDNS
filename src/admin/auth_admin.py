@@ -22,8 +22,10 @@ class AuthAdmin(AuthenticationBackend):
 
             if not user:
                 return False
-
-            if not checkpw(password.encode(), bytes.fromhex(user[0].password)):
+            try:
+                if not checkpw(password.encode(), bytes.fromhex(user[0].password)):
+                    return False
+            except TypeError:
                 return False
 
             role_data = await check_role_permission(

@@ -19,9 +19,8 @@ async def refresh_token(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     auth_data = get_jwt_data_auth_cookie(request=request)
-    print(auth_data["auth_public_uid"])
 
-    access_token, _ = await AuthService(session).check_refresh_auth_data(
+    access_token, _, _ = await AuthService(session).check_update_auth_data(
         request=request, response=response, auth_data=auth_data
     )
 

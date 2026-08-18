@@ -14,6 +14,7 @@ from .roles_permissions_mapper import RolesPermissionsMapper
 from .session_mapper import SessionMapper
 from .user_mapper import UserMapper
 from .users_roles_mapper import UserRoleMapper
+from .products_categories_mapper import ProductCategoryMapper
 
 __all__ = [
     "BlacklistMapper",
@@ -32,4 +33,5 @@ __all__ = [
     "SessionMapper",
     "UserMapper",
     "UserRoleMapper",
+    "ProductCategoryMapper",
 ]

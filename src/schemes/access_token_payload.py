@@ -5,10 +5,10 @@ from pydantic import BaseModel, Field
 
 
 class AccessTokenPayload(BaseModel):
-    authSSID: Annotated[str, Field(strict=True)]
+    authSSID: Annotated[str, Field(strict=True)]  # noqa:N815
     jti: UUID
-    userId: UUID
-    userName: Annotated[str | None, Field(strict=True)]
+    userId: UUID  # noqa:N815
+    userName: Annotated[str | None, Field(strict=True)]  # noqa:N815
     exp: Annotated[int, Field(strict=True)]
     iat: Annotated[int, Field(strict=True)]
     rnd: str

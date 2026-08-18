@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from .get_products_mapper import GetProductsMapper
 
@@ -11,4 +11,4 @@ class GetOrdersScheme(BaseModel):
     total_price: int
     total_items_count: int
     created_at: datetime
-    products: GetProductsMapper
+    products: list[GetProductsMapper] | None = Field(None)

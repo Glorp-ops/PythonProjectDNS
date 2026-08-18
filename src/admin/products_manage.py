@@ -1,7 +1,6 @@
 from typing import ClassVar
 
 from ..admin import BaseAdminSettings
-
 from ..database.db_models import Product
 
 
@@ -10,7 +9,6 @@ class ProductManage(BaseAdminSettings, model=Product):
 
     column_list: ClassVar[list[str]] = [
         "id",
-        "category_id",
         "name",
         "description",
         "price",
@@ -32,4 +30,5 @@ class ProductManage(BaseAdminSettings, model=Product):
         "order_items",
         "reviews",
         "favorites",
+        "products_categories",
     ]

@@ -2,7 +2,6 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status

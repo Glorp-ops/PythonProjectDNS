@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database.sqlalchemy_connect.base import Base
+from ...database.sqlalchemy_connect import Base
 
 if TYPE_CHECKING:
-    from database.db_models.products import Product
+    from .products_categories import ProductCategory
 
 
 class Category(Base):
@@ -20,6 +20,8 @@ class Category(Base):
         default=None,
     )
 
-    products: Mapped[list["Product"]] = relationship(back_populates="categories", uselist=True)
-
     parent: Mapped["Category"] = relationship(remote_side=[id])
+
+    products_categories: Mapped[list["ProductCategory"]] = relationship(
+        back_populates="categories", uselist=True
+    )

@@ -35,4 +35,14 @@ class UserRepository(BaseRepository):
         await check_active(session=self.session, user_id=user_email[0].id)
         await check_block(session=self.session, user_id=user_email[0].id)
 
-        return user_email
+        user_data = {
+            "user_data": {
+                "user_id": user_email[0].id,
+                "name": user_email[0].name,
+                "surname": user_email[0].surname,
+                "nickname": user_email[0].nickname,
+                "active_at": user_email[0].active_at,
+                "is_blocked": user_email[0].is_blocked
+            }
+        }
+        return user_data

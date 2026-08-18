@@ -1,11 +1,10 @@
 from typing import ClassVar
 
 from ..admin import BaseAdminSettings
-
 from ..database.db_models import CartItem
 
 
-class CartItemManager(BaseAdminSettings, model=CartItem):
+class CartItemManage(BaseAdminSettings, model=CartItem):
     _permission = "carts_items:manage"
     column_list: ClassVar[list[str]] = [
         "id",
