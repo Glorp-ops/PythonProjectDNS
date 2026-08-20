@@ -37,25 +37,24 @@ async def validate_code(email: str, code: str, user_code: str, secret: str | Non
 
     if code == user_code:
         return
-    print(code)
+
     attempts = await repo_auth_email.manager.get(f"auth:{email}:attempts")
 
     await repo_auth_email.decr(f"auth:{email}:attempts")
 
     logging.info(attempts)
-    print(attempts)
-    if attempts == "0":
+
+    if attempts is None or int(attempts) <= 0:
         if secret:
-            await repo_auth_email.manager.delete_auth_data(secret, email)
+            await repo_auth_email.delete_auth_data(secret, email)
 
         else:
-            await repo_auth_email.manager.delete_constraint(email)
+            await repo_auth_email.delete_constraint(email)
 
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="attempts are over"
         )
 
-    print(attempts)
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=f"invalid code. {int(attempts)} attempts left",

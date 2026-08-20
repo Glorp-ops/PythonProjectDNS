@@ -17,12 +17,13 @@ class UserRepository(BaseRepository):
 
         smt = select(self.model).filter_by(**kwargs).where(self.model.id != model_id)
 
-        objects = await self.session.execute(smt)
+        objects_db = await self.session.execute(smt)
 
-        if objects.scalar_one_or_none() is None:
+        objects = objects_db.scalar_one_or_none()
+        if objects is None:
             return None
 
-        return self.mapper.model_validate(objects.scalar_one_or_none())
+        return self.mapper.model_validate(objects)
 
     async def check_user_email(self, email: str):
         from src.dependencies.checker import check_active, check_block

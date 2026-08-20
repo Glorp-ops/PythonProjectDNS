@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -52,6 +52,12 @@ class ReviewService:
             ) from e
 
         product = await self.session.get(self.product_repo.model, product_id)
+        await self.session.execute(
+            update(ProductsRepository.model)
+            .where(ProductsRepository.model.id == product_id)
+            .values(review_count=ProductsRepository.model.review_count + 1)
+        )
+        await self.session.commit()
 
         if not product:
             raise HTTPException(
@@ -63,7 +69,6 @@ class ReviewService:
             )
         )
         sum_review_rating = 0
-        product.review_count += 1
 
         for rating in rating_review_db:
             sum_review_rating += rating
@@ -102,6 +107,8 @@ class ReviewService:
         try:
             product.rating = review_count_rating.rating / review_count_rating.review_count
         except ZeroDivisionError:
+            product.rating = 0
+        except TypeError:
             product.rating = 0
 
         await self.session.commit()
